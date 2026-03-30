@@ -31,9 +31,14 @@ loginHypon () {
       -H "$CONTENT_HEADER" \
       -H 'User-Agent: Mozilla/5.0' \
       --data-raw "$loginData")
+      
+      token=$(echo "$loginResponse" | jq -er '.data.token') || {
+        bashio::log.error "Login Failed"
+        return 1
+      }
 
       bashio::log.info "Login End"
-      echo $loginResponse | jq -r '.data.token'
+      echo "$token"
 }
 
 # ------------------------------------------------------------------------------
@@ -58,8 +63,15 @@ retrieveSolarData () {
                               -H 'User-Agent: Mozilla/5.0' \
                               -H "authorization: Bearer $authToken")
 
+    if ! echo "$dataRequest" | jq -e . >/dev/null 2>&1; then
+      bashio::log.error "Solar data response is not valid JSON"
+      echo "{}"
+      return 0
+    fi
+
         bashio::log.info "Load Solar Data End"
-    echo $dataRequest
+
+    echo "$dataRequest"
 }
 
 # ------------------------------------------------------------------------------
@@ -83,8 +95,14 @@ retrieveRealTimeSolarData () {
                               -H 'User-Agent: Mozilla/5.0' \
                               -H "authorization: Bearer $authToken")
 
+    if ! echo "$dataRequest" | jq -e . >/dev/null 2>&1; then
+      bashio::log.error "Realtime data response is not valid JSON"
+      echo "{}"
+      return 0
+    fi
+    
     bashio::log.info "Load Realtime Data End"
-    echo $dataRequest
+    echo "$dataRequest"
 }
 
 # ------------------------------------------------------------------------------
